@@ -1,0 +1,109 @@
+4. Pull Docker images (like python, hello-world, ubuntu) from Docker Hub, run containers, inspect running and stopped containers, and remove containers using Docker commands.
+
+Here is a practical, step-by-step guide to mastering the lifecycle of Docker containers—from pulling the images to cleaning them up.
+
+We will use the exact images you requested (`hello-world`, `ubuntu`, and `python`) to demonstrate different behaviors in Docker.
+
+---
+
+### Step 1: Pull Docker Images from Docker Hub
+
+First, we need to download (pull) the images from Docker Hub to your local machine.
+
+1.  **Pull the `hello-world` image:** (A tiny image used just to verify Docker is working).
+    ```bash
+    docker pull hello-world
+    ```
+2.  **Pull the `ubuntu` image:** (A barebones Linux operating system).
+    ```bash
+    docker pull ubuntu
+    ```
+3.  **Pull the `python` image:** (An environment pre-configured with Python).
+    ```bash
+    docker pull python
+    ```
+4.  **Verify they are downloaded:**
+    ```bash
+    docker images
+    ```
+
+---
+
+### Step 2: Run Containers from the Images
+
+Different images are designed to run in different ways. Let's run all three to see how they behave.
+
+1.  **Run `hello-world`:**
+    ```bash
+    docker run hello-world
+    ```
+    *Observation:* It prints a welcome message and immediately exits. It does not stay running.
+
+2.  **Run `ubuntu` interactively:**
+    By default, an Ubuntu container will start and immediately exit because it has no default command to keep it running. To keep it alive and look inside, we use `-it` (interactive + tty) to open a terminal inside the container.
+    ```bash
+    docker run -it --name my-ubuntu ubuntu
+    ```
+    *You are now inside the Ubuntu container! Type `exit` and press Enter to leave it (this will also stop the container).*
+
+3.  **Run `python` in the background:**
+    Let's run the Python container in detached mode (`-d`) and tell it to sleep for an hour so it stays actively running while we inspect it.
+    ```bash
+    docker run -d --name my-python python sleep 3600
+    ```
+
+---
+
+### Step 3: Inspect Running and Stopped Containers
+
+Now you have created three containers. One ran and stopped (`hello-world`), one you exited (`my-ubuntu`), and one is currently running in the background (`my-python`). 
+
+1.  **List ONLY running containers:**
+    ```bash
+    docker ps
+    ```
+    *You should only see `my-python` listed here.*
+
+2.  **List ALL containers (running and stopped):**
+    ```bash
+    docker ps -a
+    ```
+    *You will see `my-python` (Status: Up), `my-ubuntu` (Status: Exited), and the `hello-world` container (Status: Exited).*
+
+3.  **Inspect a container's deeper details:**
+    If you want to see all the configuration details (like IP addresses, volume mounts, and network settings) of a specific container, use the `inspect` command.
+    ```bash
+    docker inspect my-python
+    ```
+    *(This outputs a large JSON file. Scroll up to see its internal IP address, state, and environment variables).*
+
+---
+
+### Step 4: Stop and Remove Containers
+
+Docker containers take up disk space, so it is best practice to clean them up when you are done. **You cannot normally remove a container that is currently running.**
+
+1.  **Stop the running Python container:**
+    ```bash
+    docker stop my-python
+    ```
+    *(If you run `docker ps` now, it will be empty).*
+
+2.  **Remove a specific stopped container:**
+    Use the `rm` command followed by the container name or ID.
+    ```bash
+    docker rm my-ubuntu
+    ```
+3.  **Force-remove a running container (Shortcut):**
+    If a container is running and you want to instantly kill and remove it in one command, use the `-f` (force) flag. Let's start the python container again just to test this:
+    ```bash
+    docker run -d --name test-python python sleep 3600
+    docker rm -f test-python
+    ```
+
+4.  **Bulk Cleanup (Pro-Tip):**
+    If you have dozens of stopped containers (like the `hello-world` one we never explicitly deleted) and want to wipe all of them out at once to save space, run:
+    ```bash
+    docker container prune
+    ```
+    *(Type `y` when prompted. This safely removes ALL stopped containers, but leaves your running ones alone).*
