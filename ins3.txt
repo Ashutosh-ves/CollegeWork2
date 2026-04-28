@@ -1,0 +1,90 @@
+3. Create a repository on Docker Hub, push a Docker image to it, and pull the image from Docker Hub.
+
+Here is a clear, step-by-step guide to sharing your Docker images with the world (or your team) using Docker Hub. 
+
+We will use the `my-app-1` image you created in the previous step as our example.
+
+### Prerequisites
+* You need a free account on **[Docker Hub](https://hub.docker.com/)**.
+* Have your Docker Hub **username** and **password** (or personal access token) ready.
+
+---
+
+### Step 1: Create a Repository on Docker Hub
+
+Before you can push an image, you need a place to store it. This is done through the Docker Hub website.
+
+1. Open your web browser, go to [hub.docker.com](https://hub.docker.com/), and log in.
+2. On your dashboard, click the **Create Repository** button.
+3. Fill in the repository details:
+   * **Name:** Give it a simple name, for example, `my-custom-app`.
+   * **Description:** (Optional) Add a brief description.
+   * **Visibility:** Choose **Public** (anyone can pull it) or **Private** (only you can pull it).
+4. Click the **Create** button at the bottom.
+
+---
+
+### Step 2: Log in to Docker via your Terminal
+
+To push images from your computer to your Docker Hub account, your terminal needs to be authenticated.
+
+1. **Open your terminal** and run the login command:
+   ```bash
+   docker login
+   ```
+2. **Enter your credentials:** You will be prompted to enter your Docker Hub Username and Password. *(Note: As you type your password, the characters will remain invisible for security reasons. Just type it and press Enter).*
+
+If successful, you will see a `Login Succeeded` message.
+
+---
+
+### Step 3: Tag Your Local Image
+
+Docker uses a specific naming convention to know *where* to push an image. The format must be: `<your-dockerhub-username>/<repository-name>:<tag>`. 
+
+Right now, your image is just named `my-app-1`. We need to duplicate it with the correct name.
+
+1. **Tag the image:** Replace `yourusername` with your actual Docker Hub username. We will use `v1` (version 1) as the tag.
+   ```bash
+   docker tag my-app-1 yourusername/my-custom-app:v1
+   ```
+2. **Verify the tag:**
+   ```bash
+   docker images
+   ```
+   *You should now see both `my-app-1` and `yourusername/my-custom-app` listed. They have the same Image ID because they are the exact same image, just with two different name tags.*
+
+---
+
+### Step 4: Push the Image to Docker Hub
+
+Now that the image is correctly tagged, you can push it up to the cloud.
+
+1. **Run the push command:** (Again, replace `yourusername` with your actual username).
+   ```bash
+   docker push yourusername/my-custom-app:v1
+   ```
+2. **Wait for the upload:** You will see a progress bar for each "layer" of the image being uploaded. Once complete, you can refresh your Docker Hub repository page in your web browser to see your image successfully hosted there.
+
+---
+
+### Step 5: Pull the Image from Docker Hub
+
+To prove that the image is safely stored in the cloud and can be downloaded anywhere, let's delete your local copy and pull it back down from Docker Hub.
+
+1. **Delete your local images:** (First, ensure the container isn't running by stopping it with `docker stop container-1`, then remove the images).
+   ```bash
+   docker rmi yourusername/my-custom-app:v1
+   docker rmi my-app-1
+   ```
+   *(If you run `docker images` now, they will be gone).*
+
+2. **Pull the image from Docker Hub:**
+   ```bash
+   docker pull yourusername/my-custom-app:v1
+   ```
+3. **Verify the pull was successful:**
+   ```bash
+   docker images
+   ```
+   *You will see `yourusername/my-custom-app` is back on your machine, freshly downloaded from the cloud!*
