@@ -1,0 +1,119 @@
+2. Create multiple Docker images using Dockerfile, run containers from those images, and verify them by listing both images and running containers.
+
+Here is a step-by-step guide to creating, running, and verifying multiple Docker images. 
+
+To make this practical and easy to follow, we will create two different web servers: **App 1** (a blue-themed web page) and **App 2** (a green-themed web page). We will use Nginx as the base for both, but configure them using separate Dockerfiles.
+
+### Prerequisites
+* **Docker Desktop** installed and running on your machine, or Docker installed on your Linux/EC2 server.
+
+---
+
+### Step 1: Set Up Your Project Folders
+
+Docker builds use a "build context," which includes everything in the current directory. To keep things clean, we will create separate folders for each app.
+
+1. **Open your terminal** and create two directories:
+   ```bash
+   mkdir app1 app2
+   ```
+
+---
+
+### Step 2: Create the First Docker Image (App 1)
+
+1. **Navigate into the first folder:**
+   ```bash
+   cd app1
+   ```
+2. **Create a custom HTML file:**
+   Create a file named `index.html` and add some simple HTML:
+   ```bash
+   echo "<h1 style='color: blue;'>Hello from App 1!</h1>" > index.html
+   ```
+3. **Create the `Dockerfile`:**
+   Create a file named `Dockerfile` (no extension) and paste the following configuration:
+   ```dockerfile
+   # Use the official Nginx image as a base
+   FROM nginx:alpine
+   
+   # Copy our custom index.html into the Nginx server directory
+   COPY index.html /usr/share/nginx/html/index.html
+   
+   # Expose port 80 inside the container
+   EXPOSE 80
+   ```
+4. **Build the first image:**
+   Tell Docker to build the image, tag it (`-t`) as `my-app-1`, and use the current directory (`.`) as the context.
+   ```bash
+   docker build -t my-app-1 .
+   ```
+
+---
+
+### Step 3: Create the Second Docker Image (App 2)
+
+1. **Navigate into the second folder:**
+   Move out of `app1` and into `app2`:
+   ```bash
+   cd ../app2
+   ```
+2. **Create a different HTML file:**
+   ```bash
+   echo "<h1 style='color: green;'>Hello from App 2!</h1>" > index.html
+   ```
+3. **Create the `Dockerfile`:**
+   Create a file named `Dockerfile` with the exact same instructions as before:
+   ```dockerfile
+   FROM nginx:alpine
+   COPY index.html /usr/share/nginx/html/index.html
+   EXPOSE 80
+   ```
+4. **Build the second image:**
+   ```bash
+   docker build -t my-app-2 .
+   ```
+
+---
+
+### Step 4: Verify Your Docker Images
+
+Now that both images are built, you can verify they exist on your system.
+
+1. **List all Docker images:**
+   ```bash
+   docker images
+   ```
+   *You should see `my-app-1` and `my-app-2` listed in the output, along with `nginx` (which was downloaded as the base).*
+
+---
+
+### Step 5: Run Containers from Your Images
+
+We will now start a container for each image. Because they both use port 80 internally, we need to map them to different ports on your host machine so they don't clash.
+
+1. **Run App 1 on port 8081:**
+   ```bash
+   docker run -d -p 8081:80 --name container-1 my-app-1
+   ```
+   *(The `-d` flag runs it in the background/detached mode. `-p 8081:80` maps your machine's port 8081 to the container's port 80).*
+
+2. **Run App 2 on port 8082:**
+   ```bash
+   docker run -d -p 8082:80 --name container-2 my-app-2
+   ```
+
+---
+
+### Step 6: Verify the Running Containers
+
+Finally, let's confirm that both containers are actively running.
+
+1. **List all running containers:**
+   ```bash
+   docker ps
+   ```
+   *You should see a table displaying both `container-1` and `container-2` with their status as "Up" and their respective port mappings.*
+
+**Optional: Test it out!**
+If you are running this locally, open your web browser and go to `http://localhost:8081` and `http://localhost:8082`. You will see your blue and green web pages being served from entirely separate, isolated containers.
