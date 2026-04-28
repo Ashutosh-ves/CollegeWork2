@@ -1,0 +1,130 @@
+6. Launch and connect to an AWS EC2 instance and create a custom website using Chef and prove idepotency.
+
+This is an excellent practical exercise. Moving from manual setups to Configuration Management tools like **Chef** is a major step in infrastructure automation. 
+
+In this guide, we will use **Chef Local Mode** (running Chef directly on the EC2 instance without needing a complex, separate Chef Server). We will write a recipe to configure an Apache web server, deploy it, and then prove the core concept of **idempotency** (the ability to run a script multiple times without making unintended changes if the desired state is already met).
+
+---
+
+### Step 1: Launch and Connect to Your EC2 Instance
+
+*(Assuming you have already launched an **Ubuntu** EC2 instance with **Port 80 (HTTP)** and **Port 22 (SSH)** open in your Security Group).*
+
+1. **Connect to your instance** using your terminal:
+   ```bash
+   ssh -i "your-key.pem" ubuntu@<your-ec2-public-ip>
+   ```
+2. **Update the system:**
+   ```bash
+   sudo apt update && sudo apt upgrade -y
+   ```
+
+---
+
+### Step 2: Install the Chef Client
+
+Instead of installing a full Chef Server, we just need the `chef-client` to execute our code locally. Chef provides an installation script that automatically fetches the latest stable version.
+
+1. **Download and run the Chef installation script:**
+   ```bash
+   curl -L https://omnitruck.chef.io/install.sh | sudo bash
+   ```
+2. **Verify the installation:**
+   ```bash
+   chef-client -v
+   ```
+   *(This should output the installed Chef version, confirming it is ready to use).*
+
+---
+
+### Step 3: Write the Chef Recipe
+
+Chef uses "Recipes" written in Ruby to define the *desired state* of your server. Let's write a recipe to install Apache, ensure it is running, and create a custom web page.
+
+1. **Create a file named `web.rb`:**
+   ```bash
+   nano web.rb
+   ```
+2. **Paste the following Chef code:**
+   ```ruby
+   # 1. Update the apt cache so we can find the apache package
+   apt_update 'Update the apt cache' do
+     action :update
+   end
+
+   # 2. Install the Apache web server
+   package 'apache2' do
+     action :install
+   end
+
+   # 3. Ensure the Apache service is enabled (starts on boot) and running right now
+   service 'apache2' do
+     action [:enable, :start]
+   end
+
+   # 4. Create our custom web page
+   file '/var/www/html/index.html' do
+     content '<html>
+                <body style="text-align:center; margin-top:50px; font-family:sans-serif;">
+                  <h1 style="color:#E05243;">Hello from Chef!</h1>
+                  <p>This web server was configured automatically.</p>
+                </body>
+              </html>'
+     action :create
+   end
+   ```
+3. **Save and exit:** Press `Ctrl + O`, `Enter`, then `Ctrl + X`.
+
+---
+
+### Step 4: Run the Chef Recipe (First Run)
+
+Now we will execute the recipe. Pay close attention to the output.
+
+1. **Run the recipe in local mode:**
+   ```bash
+   sudo chef-client --local-mode web.rb
+   ```
+2. **Observe the output:**
+   You will see Chef actively changing the system to match your recipe. It will say things like:
+   * `* apt_update[Update the apt cache] action update (up to date)`
+   * `* package[apache2] action install (new resource updated)`
+   * `* service[apache2] action enable (new resource updated)`
+   * `* file[/var/www/html/index.html] action create (new resource updated)`
+
+At the very bottom, it will say something like: **`Chef Infra Client finished, 4/4 resources updated`**. Chef has successfully built your server!
+
+---
+
+### Step 5: Prove Idempotency (The Second Run)
+
+**Idempotency** is the defining feature of tools like Chef, Ansible, and Terraform. It means: *"If I run this script 100 times, the result will be exactly the same as running it once. If the system is already exactly how I want it, do absolutely nothing."*
+
+Let's prove this by running the exact same command again.
+
+1. **Run the recipe a second time:**
+   ```bash
+   sudo chef-client --local-mode web.rb
+   ```
+2. **Observe the output this time:**
+   * `* apt_update[Update the apt cache] action update (up to date)`
+   * `* package[apache2] action install (up to date)`
+   * `* service[apache2] action enable (up to date)`
+   * `* file[/var/www/html/index.html] action create (up to date)`
+
+At the bottom, it will say: **`Chef Infra Client finished, 0/4 resources updated`**.
+
+**The Proof:** Chef checked the server, saw that Apache was already installed, already running, and the `index.html` already had the exact right text. Because the *desired state* was already met, Chef made **zero changes**. 
+
+*(Optional test: Open `nano /var/www/html/index.html`, manually delete a line of HTML, save it, and run Chef a third time. Chef will detect the change, fix the file, and output `1/4 resources updated`).*
+
+---
+
+### Step 6: Verify Your Custom Website
+
+1. Open your web browser.
+2. Enter your EC2 instance's Public IP address:
+   ```text
+   http://<your-ec2-public-ip>
+   ```
+You will see your custom "Hello from Chef!" web page, successfully deployed and strictly managed by configuration as code.
