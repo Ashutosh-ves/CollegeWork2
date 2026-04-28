@@ -1,0 +1,112 @@
+1. Connect to a given EC2 instance and deploy the web page
+Here is a detailed, step-by-step guide to connecting to an AWS EC2 instance and deploying a simple web page. 
+
+These instructions assume you are using **Ubuntu** (the most common OS for web servers on EC2) and are using a terminal (Linux, macOS, or Windows Git Bash/PowerShell).
+
+### Prerequisites Before You Start
+* **Your Private Key:** The `.pem` file you downloaded when creating the EC2 instance.
+* **The Public IP Address:** Found in your AWS EC2 Management Console under the instance details.
+* **Security Groups:** Ensure your EC2 instance's attached Security Group has inbound rules allowing **SSH (Port 22)** and **HTTP (Port 80)**.
+
+---
+
+### Step 1: Secure Your Key and Connect via SSH
+
+AWS requires your private key file to be protected from being read by others. If the permissions are too open, the connection will be rejected.
+
+1.  **Open your terminal** and navigate to the folder containing your `.pem` file.
+    ```bash
+    cd path/to/your/key-folder
+    ```
+2.  **Restrict permissions** on your `.pem` file (this is mandatory).
+    ```bash
+    chmod 400 your-key-file.pem
+    ```
+3.  **Connect to the instance.** The default username for Ubuntu instances is `ubuntu` (if you are using Amazon Linux, the username is `ec2-user`).
+    ```bash
+    ssh -i "your-key-file.pem" ubuntu@<your-ec2-public-ip>
+    ```
+    *Note: When asked "Are you sure you want to continue connecting?", type `yes` and press Enter.*
+
+---
+
+### Step 2: Update the Server
+
+Once you are logged into the EC2 terminal, it is best practice to update the package lists to ensure you install the latest software versions.
+
+1.  **Run the update command:**
+    ```bash
+    sudo apt update && sudo apt upgrade -y
+    ```
+
+---
+
+### Step 3: Install a Web Server (Nginx)
+
+To serve a web page, you need a web server. **Nginx** is lightweight, fast, and an industry standard.
+
+1.  **Install Nginx:**
+    ```bash
+    sudo apt install nginx -y
+    ```
+2.  **Start the Nginx service** and enable it so it starts automatically if the server reboots:
+    ```bash
+    sudo systemctl start nginx
+    sudo systemctl enable nginx
+    ```
+3.  **Verify it is running:**
+    ```bash
+    sudo systemctl status nginx
+    ```
+    *(Press `q` to exit the status screen).*
+
+---
+
+### Step 4: Deploy Your Web Page
+
+By default, Nginx serves files from the `/var/www/html` directory. 
+
+1.  **Navigate to the web root directory:**
+    ```bash
+    cd /var/www/html
+    ```
+2.  **Remove the default Nginx page:**
+    ```bash
+    sudo rm index.html
+    ```
+3.  **Create your own `index.html` file.** You can use a terminal text editor like `nano`:
+    ```bash
+    sudo nano index.html
+    ```
+4.  **Paste your HTML code** into the editor. Here is a simple example:
+    ```html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>My EC2 Web Page</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+            h1 { color: #ff9900; }
+        </style>
+    </head>
+    <body>
+        <h1>Hello from AWS EC2!</h1>
+        <p>My web server is successfully running.</p>
+    </body>
+    </html>
+    ```
+5.  **Save and exit:** * Press `Ctrl + O` to save (Write Out), then press `Enter` to confirm the file name.
+    * Press `Ctrl + X` to exit the editor.
+
+---
+
+### Step 5: Test Your Deployment
+
+1.  Open any web browser on your computer.
+2.  Type your EC2 instance's **Public IP Address** directly into the URL bar:
+    ```text
+    http://<your-ec2-public-ip>
+    ```
+    *(Note: Ensure you are using `http://` and not `https://`, as SSL certificates have not been configured in this basic setup).*
+
+You should now see your custom HTML page live on the internet.
